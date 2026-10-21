@@ -70,7 +70,7 @@
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL='https://xcsxvjbonkactctgtblu.supabase.co',SUPABASE_PUBLISHABLE_KEY='sb_publishable_S-e9nVOrLNeYzD-XxoAzvQ_ePFpFxTj';
+    const SUPABASE_URL=__SUPABASE_URL__,SUPABASE_PUBLISHABLE_KEY=__SUPABASE_PUBLISHABLE_KEY__;
     let supabaseClient=null,currentUser=null,currentAccess=null,initializedUserId=null;
     const colors=['#2878b5','#2e8b73','#e49b38'],chartDefs=[
       {id:'temp-humidity',title:'Temperatura e umidade do ar',description:'°C (eixo esquerdo) · umidade % (eixo direito)',series:[{key:'temp',name:'Temperatura',axis:'left'},{key:'humidity',name:'Umidade',axis:'right',dash:true}]},

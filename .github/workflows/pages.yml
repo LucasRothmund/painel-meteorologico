@@ -1,0 +1,60 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Build site with Supabase configuration
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          url = os.environ.get("SUPABASE_URL", "").strip()
+          key = os.environ.get("SUPABASE_PUBLISHABLE_KEY", "").strip()
+          if not url.startswith("https://") or not key:
+              raise SystemExit("Configure SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in repository settings.")
+          if "service_role" in key.lower() or "secret" in key.lower() or key.lower().startswith("sb_secret_"):
+              raise SystemExit("Do not use a Supabase secret/service_role key in a browser site.")
+
+          html = Path("index.html").read_text(encoding="utf-8")
+          html = html.replace("__SUPABASE_URL__", json.dumps(url))
+          html = html.replace("__SUPABASE_PUBLISHABLE_KEY__", json.dumps(key))
+          if "__SUPABASE_" in html:
+              raise SystemExit("Supabase configuration placeholder was not replaced.")
+          output = Path("_site")
+          output.mkdir(exist_ok=True)
+          (output / "index.html").write_text(html, encoding="utf-8")
+          PY
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
