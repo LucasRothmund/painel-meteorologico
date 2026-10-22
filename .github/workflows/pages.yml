@@ -50,6 +50,7 @@ jobs:
           output = Path("_site")
           output.mkdir(exist_ok=True)
           (output / "index.html").write_text(html, encoding="utf-8")
+          (output / "site_admin.js").write_bytes(Path("site_admin.js").read_bytes())
           PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
