@@ -196,7 +196,7 @@
       $('privateApp').hidden=false;if(!currentUser||approved)$('authGate').hidden=true;
       $('loginOpenButton').hidden=!!currentUser;$('signoutButton').hidden=!currentUser;$('pendingSignout').hidden=true;
       $('adminTabButton').hidden=!isAdmin;$('settingsTabButton').hidden=!isAdmin;$('botControlTabButton').hidden=!isAdmin;$('settingsGroupButton').hidden=!isAdmin;
-      $('forecastTabButton').hidden=!approved;
+      $('forecastTabButton').hidden=false;
     }
     async function applySession(session){
       const nextUser=session?.user||null;
