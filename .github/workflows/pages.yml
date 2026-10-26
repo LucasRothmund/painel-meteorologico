@@ -33,6 +33,7 @@ jobs:
           python - <<'PY'
           import json
           import os
+          import shutil
           from pathlib import Path
 
           url = os.environ.get("SUPABASE_URL", "").strip()
@@ -51,6 +52,7 @@ jobs:
           output.mkdir(exist_ok=True)
           (output / "index.html").write_text(html, encoding="utf-8")
           (output / "site_admin.js").write_bytes(Path("site_admin.js").read_bytes())
+          shutil.copytree("Assets", output / "Assets", dirs_exist_ok=True)
           PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
