@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17,47 * * * *'
 
 permissions:
   contents: read
@@ -53,6 +55,39 @@ jobs:
           (output / "index.html").write_text(html, encoding="utf-8")
           (output / "site_admin.js").write_bytes(Path("site_admin.js").read_bytes())
           shutil.copytree("Assets", output / "Assets", dirs_exist_ok=True)
+          PY
+      - name: Publish Monitor version manifest
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          manifest = {
+              "version": "0.0.0", "storage_bucket": "monitor-releases",
+              "storage_path": "", "sha256": "", "release_url": "",
+              "supabase_url": os.environ.get("SUPABASE_URL", ""),
+              "supabase_publishable_key": os.environ.get("SUPABASE_PUBLISHABLE_KEY", ""),
+          }
+          try:
+              request = urllib.request.Request(
+                  os.environ["SUPABASE_URL"].rstrip("/") + "/rest/v1/monitor_release_manifest?select=version,storage_bucket,storage_path,sha256,release_url&singleton=eq.true&limit=1",
+                  headers={"apikey": os.environ["SUPABASE_PUBLISHABLE_KEY"], "Accept": "application/json"},
+              )
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  rows = json.load(response)
+              if rows:
+                  manifest.update(rows[0])
+          except (OSError, ValueError, KeyError):
+              pass
+
+          output = Path("_site")
+          output.mkdir(exist_ok=True)
+          (output / "monitor-version.json").write_text(json.dumps(manifest), encoding="utf-8")
           PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
