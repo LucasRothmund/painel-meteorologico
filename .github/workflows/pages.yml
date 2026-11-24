@@ -24,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Configure Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@v5
       - name: Build site with Supabase configuration
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
@@ -90,9 +90,9 @@ jobs:
           (output / "monitor-version.json").write_text(json.dumps(manifest), encoding="utf-8")
           PY
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v3
         with:
           path: _site
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4

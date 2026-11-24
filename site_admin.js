@@ -67,33 +67,7 @@ document.addEventListener('click',event=>{const button=event.target.closest('[da
     }catch(error){status.textContent='Falha no download: '+(error.message||error)}
     finally{button.disabled=false}
   }
-  async function loadMonitorBuilds(){
-    const status=$('monitorBuildsStatus'),container=$('monitorBuildsList');
-    if(!admin()){status.textContent='Apenas administradores aprovados podem consultar builds.';return}
-    status.textContent='Consultando builds privados...';
-    try{
-      const {data,error}=await supabaseClient.storage.from('monitor-releases').list('builds',{limit:100,sortBy:{column:'created_at',order:'desc'}});
-      if(error)throw error;
-      const builds=(data||[]).filter(item=>item.id&&/\.exe$/i.test(item.name));
-      if(!builds.length){container.innerHTML='<div class="empty">Nenhum build de branch disponivel.</div>';status.textContent='';return}
-      container.innerHTML='<table><thead><tr><th>Executavel</th><th>Enviado em</th><th></th></tr></thead><tbody>'+builds.map(item=>'<tr><td>'+esc(item.name)+'</td><td>'+dt(item.created_at||item.updated_at)+'</td><td><button type="button" data-monitor-build="'+esc(item.name)+'">Baixar</button></td></tr>').join('')+'</tbody></table>';
-      container.querySelectorAll('[data-monitor-build]').forEach(button=>button.addEventListener('click',()=>downloadMonitorBuild(button.dataset.monitorBuild)));
-      status.textContent=builds.length+' build(s) privado(s).';
-    }catch(error){container.innerHTML='';status.textContent='Falha ao consultar builds: '+(error.message||error)}
-  }
-  async function downloadMonitorBuild(name){
-    const status=$('monitorBuildsStatus');
-    if(!admin()){status.textContent='Apenas administradores aprovados podem baixar builds.';return}
-    status.textContent='Baixando '+name+'...';
-    try{
-      const {data,error}=await supabaseClient.storage.from('monitor-releases').download('builds/'+name);
-      if(error)throw error;
-      const url=URL.createObjectURL(data),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-      status.textContent='Download de '+name+' concluido.';
-    }catch(error){status.textContent='Falha no download: '+(error.message||error)}
-  }
-  $('refreshMonitorBuilds').addEventListener('click',loadMonitorBuilds);
-  $('downloadMonitorButton').addEventListener('click',downloadMonitorRelease);  window.setTab=function(tab){const reportsWasVisible=!$('reportsTab').hidden;let active=tab;if(!admin()&&['settings','botControl','admin'].includes(active))active='equipment';const group=['equipment','communication','forecast'].includes(active)?'monitoring':active==='reports'?'reports':'settings';$('monitoringSubnav').hidden=group!=='monitoring';$('reportsSubnav').hidden=group!=='reports';$('settingsSubnav').hidden=group!=='settings';$('monitoringGroupButton').classList.toggle('active',group==='monitoring');$('reportsGroupButton').classList.toggle('active',group==='reports');$('settingsGroupButton').classList.toggle('active',group==='settings');const ids=['equipment','communication','forecast','reports','settings','botControl','admin'];ids.forEach(id=>{const section=$(id==='equipment'?'equipmentTab':id+'Tab'),button=$(id+'TabButton');if(section)section.hidden=id!==active;if(button)button.classList.toggle('active',id===active)});if(active==='communication'){communicationDefaults();if(!communicationLoaded)loadCommunication();else requestAnimationFrame(renderCommunicationCharts)}if(active==='forecast'&&!forecastLoaded)loadForecast();if(active==='admin'){loadAdminUsers();if(admin()){downloadMonitorRelease();loadMonitorBuilds()}};if(active==='reports'){reportDateDefaults();populateReportFleet();if(!reportLoaded||!reportsWasVisible)loadReport();else renderReport()}if(active==='settings'){loadSettings();if(scheduleTimer)clearInterval(scheduleTimer);scheduleTimer=setInterval(()=>{if(!$('settingsTab').hidden)loadSettings()},30000)}else if(scheduleTimer){clearInterval(scheduleTimer);scheduleTimer=null}if(active==='botControl'){loadControl();if(timer)clearInterval(timer);timer=setInterval(loadControl,20000)}else if(timer){clearInterval(timer);timer=null}};
+  $('downloadMonitorButton').addEventListener('click',downloadMonitorRelease);  window.setTab=function(tab){const reportsWasVisible=!$('reportsTab').hidden;let active=tab;if(!admin()&&['settings','botControl','admin'].includes(active))active='equipment';const group=['equipment','communication','forecast'].includes(active)?'monitoring':active==='reports'?'reports':'settings';$('monitoringSubnav').hidden=group!=='monitoring';$('reportsSubnav').hidden=group!=='reports';$('settingsSubnav').hidden=group!=='settings';$('monitoringGroupButton').classList.toggle('active',group==='monitoring');$('reportsGroupButton').classList.toggle('active',group==='reports');$('settingsGroupButton').classList.toggle('active',group==='settings');const ids=['equipment','communication','forecast','reports','settings','botControl','admin'];ids.forEach(id=>{const section=$(id==='equipment'?'equipmentTab':id+'Tab'),button=$(id+'TabButton');if(section)section.hidden=id!==active;if(button)button.classList.toggle('active',id===active)});if(active==='communication'){communicationDefaults();if(!communicationLoaded)loadCommunication();else requestAnimationFrame(renderCommunicationCharts)}if(active==='forecast'&&!forecastLoaded)loadForecast();if(active==='admin'){loadAdminUsers();if(admin())downloadMonitorRelease()};if(active==='reports'){reportDateDefaults();populateReportFleet();if(!reportLoaded||!reportsWasVisible)loadReport();else renderReport()}if(active==='settings'){loadSettings();if(scheduleTimer)clearInterval(scheduleTimer);scheduleTimer=setInterval(()=>{if(!$('settingsTab').hidden)loadSettings()},30000)}else if(scheduleTimer){clearInterval(scheduleTimer);scheduleTimer=null}if(active==='botControl'){loadControl();if(timer)clearInterval(timer);timer=setInterval(loadControl,20000)}else if(timer){clearInterval(timer);timer=null}};
   $('settingsTabButton').addEventListener('click',()=>setTab('settings'));$('botControlTabButton').addEventListener('click',()=>setTab('botControl'));$('scheduleForm').addEventListener('submit',addSchedule);$('stationForm').addEventListener('submit',addStation);$('refreshSchedules').onclick=loadSettings;$('refreshStations').onclick=loadSettings;$('scheduleMode').addEventListener('change',updateScheduleFields);$('scheduleType').addEventListener('change',updateScheduleFields);document.querySelectorAll('[data-bot-action]').forEach(b=>b.onclick=()=>command(b.dataset.botAction));$('refreshBotStatus').onclick=loadControl;$('exportForm').addEventListener('submit',extract);
 })();
 
